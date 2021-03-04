@@ -20,15 +20,21 @@ function set_clock () {
 #
 function set_disk_partition () {
     fdisk -l
-    read -p "Select your disk (eg. /dev/sda): " disk_path
+    read -p "Select your disk (eg. /dev/sda): " s_disk
     echo ""
-    read -p "Are you sure is it your disk, all the data will be erased ($disk_path)? [Y/n] " disk_confirmation
+    read -p "Are you sure is it your disk, all the data will be erased ($s_disk)? [Y/n] " disk_confirmation
     if [ "$disk_confirmation" != "Y" ] && [ "$disk_confirmation" != "y" ]; then
         echo "Exiting script.."
         exit 1
     fi
 
-fdisk $disk_path <<EOF
+    if [[ $s_disk == *"nvme"* ]]; then
+        p_disk="${s_disk}p"
+    else
+        p_disk="${s_disk}"
+    fi
+
+fdisk $s_disk <<EOF
 g
 n
 1
@@ -58,10 +64,10 @@ EOF
 #
 function set_partition_tables () {
     echo " >> Setting the partitions tables"
-    mkfs.vfat -F32 "${disk_path}1"
-    mkswap "${disk_path}2"
-    swapon "${disk_path}2"
-    mkfs.ext4 "${disk_path}3"
+    mkfs.vfat -F32 "${p_disk}1"
+    mkswap "${p_disk}2"
+    swapon "${p_disk}2"
+    mkfs.ext4 "${p_disk}3"
 }
 
 
@@ -70,7 +76,7 @@ function set_partition_tables () {
 #
 function mount_file_system () {
     echo " >> Mounting the file system"
-    mount "${disk_path}3" /mnt
+    mount "${p_disk}3" /mnt
 }
 
 
@@ -158,7 +164,7 @@ function chroot_config_sudo () {
 function config_bootloader () {
     arch_chroot "_chroot_install_bootloader"
     arch_chroot "_chroot_create_efi_dir"
-    arch_chroot "_chroot_mount_efi_dir" "${disk_path}"
+    arch_chroot "_chroot_mount_efi_dir" "${p_disk}"
     arch_chroot "_chroot_grub_config"
 }
 function chroot_install_bootloader () {
