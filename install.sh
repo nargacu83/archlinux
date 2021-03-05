@@ -19,7 +19,7 @@ function set_clock () {
 # Disk partition
 #
 function set_disk_partition () {
-    fdisk -l
+    lsblk
     read -p "Select your disk (eg. /dev/sda): " s_disk
     echo ""
     read -p "Are you sure is it your disk, all the data will be erased ($s_disk)? [Y/n] " disk_confirmation
