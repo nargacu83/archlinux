@@ -4,6 +4,9 @@ LANGUAGE="en_US"
 HOSTNAME="arch"
 USERNAME="username"
 
+P_UEFI="550M"
+P_SWAP="8G"
+
 
 #
 # System clock
@@ -19,7 +22,7 @@ function set_clock () {
 # Disk partition
 #
 function set_disk_partition () {
-    lsblk
+    lsblk -f
     read -p "Select your disk (eg. /dev/sda): " s_disk
     echo ""
     read -p "Are you sure is it your disk, all the data will be erased ($s_disk)? [Y/n] " disk_confirmation
@@ -28,34 +31,16 @@ function set_disk_partition () {
         exit 1
     fi
 
-    if [[ $s_disk == *"nvme"* ]]; then
+    if [ "${s_disk::8}" == "/dev/nvm" ]; then
         p_disk="${s_disk}p"
     else
         p_disk="${s_disk}"
     fi
 
-fdisk $s_disk <<EOF
-g
-n
-1
-
-+550M
-n
-2
-
-+8G
-n
-3
-
-
-t
-1
-1
-t
-2
-19
-w
-EOF
+    parted ${s_disk} mklabel gpt                  # GPT (sgdisk --list-types)
+    sgdisk ${s_disk} -n=1:0:+${P_UEFI} -t=1:ef00  # UEFI
+    sgdisk ${s_disk} -n=2:0:+${P_SWAP} -t=2:8200  # Linux Swap
+    sgdisk ${s_disk} -n=3:0:0 -t=3:8300           # File System
 }
 
 
