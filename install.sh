@@ -4,9 +4,6 @@ LANGUAGE="en_US"
 HOSTNAME="arch"
 USERNAME="username"
 
-P_UEFI="550M"
-P_SWAP="8G"
-
 
 #
 # System clock
@@ -38,9 +35,8 @@ function set_disk_partition () {
     fi
 
     parted ${s_disk} mklabel gpt                  # GPT (sgdisk --list-types)
-    sgdisk ${s_disk} -n=1:0:+${P_UEFI} -t=1:ef00  # UEFI
-    sgdisk ${s_disk} -n=2:0:+${P_SWAP} -t=2:8200  # Linux Swap
-    sgdisk ${s_disk} -n=3:0:0 -t=3:8300           # File System
+    sgdisk ${s_disk} -n=1:0:+550M -t=1:ef00       # UEFI
+    sgdisk ${s_disk} -n=2:0:0 -t=2:8300           # File System
 }
 
 
@@ -50,9 +46,7 @@ function set_disk_partition () {
 function set_partition_tables () {
     echo " >> Setting the partitions tables"
     mkfs.vfat -F32 "${p_disk}1"
-    mkswap "${p_disk}2"
-    swapon "${p_disk}2"
-    mkfs.ext4 "${p_disk}3"
+    mkfs.ext4 "${p_disk}2"
 }
 
 
@@ -61,7 +55,7 @@ function set_partition_tables () {
 #
 function mount_file_system () {
     echo " >> Mounting the file system"
-    mount "${p_disk}3" /mnt
+    mount "${p_disk}2" /mnt
 }
 
 
@@ -234,13 +228,13 @@ function main () {
             '_chroot_network_manager') chroot_network_manager;;
         esac
     else
-        
+
         set_clock
 
         set_disk_partition
 
         set_partition_tables
-        
+
         mount_file_system
 
         install_base_packages
