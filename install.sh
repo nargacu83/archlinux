@@ -56,6 +56,8 @@ function set_partition_tables () {
 function mount_file_system () {
     echo " >> Mounting the file system"
     mount "${p_disk}2" /mnt
+    mkdir -p /mnt/boot/efi
+    mount "${p_disk}1" /mnt/boot/efi
 }
 
 
@@ -152,19 +154,9 @@ function chroot_install_bootloader () {
     pacman -S --needed --noconfirm efibootmgr dosfstools os-prober mtools
     exit 0
 }
-function chroot_create_efi_dir () {
-    echo " >> Creating EFI directory"
-    mkdir /boot/EFI
-    exit 0
-}
-function chroot_mount_efi_dir () {
-    echo " >> Mounting EFI directory"
-    mount "${1}1" /boot/EFI
-    exit 0
-}
 function chroot_grub_config () {
     echo " >> Configuring the grub"
-    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck
     grub-mkconfig -o /boot/grub/grub.cfg
     exit 0
 }
@@ -222,8 +214,6 @@ function main () {
             '_chroot_add_user_groups') chroot_add_user_groups;;
             '_chroot_config_sudo') chroot_config_sudo;;
             '_chroot_install_bootloader') chroot_install_bootloader;;
-            '_chroot_create_efi_dir') chroot_create_efi_dir;;
-            '_chroot_mount_efi_dir') chroot_mount_efi_dir "${3}";;
             '_chroot_grub_config') chroot_grub_config;;
             '_chroot_network_manager') chroot_network_manager;;
         esac
