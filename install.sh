@@ -87,7 +87,7 @@ function config_system () {
 }
 function chroot_symlink () {
     echo " >> Creating symlink for the localetime"
-    ln -sf /usr/share/zoneinfo/Europe/Paris /etc/localtime
+    ln -sf /usr/share/zoneinfo/${TIME_ZONE} /etc/localtime
     exit 0
 }
 function chroot_hwclock () {
