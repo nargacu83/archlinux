@@ -1,32 +1,27 @@
 #!/bin/bash
-TIME_ZONE="Europe/Paris"
-LANGUAGE="fr_FR"
-HOSTNAME="arch"
-USERNAME="username"
+time_zone="Europe/Paris"
+language="fr_FR"
+keymap="fr"
+hostname="arch"
+username="username"
 
 function enable_parallel_downloads () {
     sudo sed -i '/^#\ParallelDownloads =/{N;s/#//g}' /etc/pacman.conf
 }
 
-#
-# System clock
-#
 function set_clock () {
     echo "Setting the system clock"
     timedatectl set-ntp true
-    timedatectl set-timezone $TIME_ZONE
+    timedatectl set-timezone ${time_zone}
 }
 
 
-#
-# Disk partition
-#
 function set_disk_partition () {
     lsblk -f
     read -p "Select your disk (eg. /dev/sda): " s_disk
     echo ""
-    read -p "Are you sure is it your disk, all the data will be erased ($s_disk)? [Y/n] " disk_confirmation
-    if [ "$disk_confirmation" != "Y" ] && [ "$disk_confirmation" != "y" ]; then
+    read -p "Are you sure is it your disk, all the data will be erased (${s_disk})? [Y/n] " disk_confirmation
+    if [ "${disk_confirmation}" != "Y" ] && [ "${disk_confirmation}" != "y" ]; then
         echo "Exiting script.."
         exit 1
     fi
@@ -42,20 +37,12 @@ function set_disk_partition () {
     sgdisk ${s_disk} -n=2:0:0 -t=2:8300           # File System
 }
 
-
-#
-# Set partition table
-#
 function set_partition_tables () {
     echo " >> Setting the partitions tables"
     mkfs.vfat -F32 "${p_disk}1"
     mkfs.ext4 "${p_disk}2"
 }
 
-
-#
-# Mount file system
-#
 function mount_file_system () {
     echo " >> Mounting the file system"
     mount "${p_disk}2" /mnt
@@ -63,19 +50,11 @@ function mount_file_system () {
     mount "${p_disk}1" /mnt/boot/efi
 }
 
-
-#
-# Install base packages
-#
 function install_base_packages () {
     echo " >> Installing linux base package"
     pacstrap /mnt base linux linux-firmware
 }
 
-
-#
-# System configuration
-#
 function config_system () {
     echo " >> Configuring system"
     genfstab -U -p /mnt >> /mnt/etc/fstab
@@ -90,7 +69,7 @@ function config_system () {
 }
 function chroot_symlink () {
     echo " >> Creating symlink for the localetime"
-    ln -sf /usr/share/zoneinfo/${TIME_ZONE} /etc/localtime
+    ln -sf /usr/share/zoneinfo/${time_zone} /etc/localtime
     exit 0
 }
 function chroot_hwclock () {
@@ -100,15 +79,16 @@ function chroot_hwclock () {
 }
 function chroot_locale_gen () {
     echo " >> Setting the system language"
-    echo "${LANGUAGE}.UTF-8 UTF-8" >> /etc/locale.gen
-    echo "KEYMAP=${LANGUAGE}" >> /etc/vconsole.conf
+    echo "LANG=\"${language}.UTF-8\"" >> /etc/locale.conf
+    echo "${language}.UTF-8 UTF-8" >> /etc/locale.gen
     locale-gen
+    echo "KEYMAP=${language}" > /etc/vconsole.conf
     exit 0
 }
 function chroot_hosts () {
     echo " >> Setting the system hosts"
-    echo ${HOSTNAME} > /etc/hostname
-    echo "127.0.1.1 ${HOSTNAME}.localdomain ${HOSTNAME}" >> /etc/hosts
+    echo ${hostname} > /etc/hostname
+    echo "127.0.1.1 ${hostname}.localdomain ${hostname}" >> /etc/hosts
     exit 0
 }
 function chroot_passwd () {
@@ -121,18 +101,18 @@ function chroot_passwd () {
     exit 0
 }
 function chroot_add_user () {
-    echo " >> Changing ${USERNAME} password"
-	useradd -m ${USERNAME}
+    echo " >> Changing ${username} password"
+	useradd -m ${username}
     passed=1
 	while [[ ${passed} != 0 ]]; do
-		passwd ${USERNAME}
+		passwd ${username}
 		passed=$?
 	done
     exit 0
 }
 function chroot_add_user_groups () {
-    echo " >> Adding groups to ${USERNAME}"
-    usermod -aG wheel,audio,video,optical,storage ${USERNAME}
+    echo " >> Adding groups to ${username}"
+    usermod -aG wheel,audio,video,optical,storage ${username}
     exit 0
 }
 function chroot_config_sudo () {
@@ -142,10 +122,6 @@ function chroot_config_sudo () {
     exit 0
 }
 
-
-#
-# Config bootloader
-#
 function config_bootloader () {
     arch_chroot "_chroot_install_bootloader"
     arch_chroot "_chroot_create_efi_dir"
@@ -165,10 +141,6 @@ function chroot_grub_config () {
     exit 0
 }
 
-
-#
-# Config network manager
-#
 function config_network_manager () {
     arch_chroot "_chroot_network_manager"
 }
@@ -179,20 +151,12 @@ function chroot_network_manager () {
     exit 0
 }
 
-
-#
-# The end
-#
 function the_end () {
     echo " >> Umount /mnt"
     umount -l /mnt
     exit 0
 }
 
-
-#
-# Arch chroot
-#
 function arch_chroot () {
 	echo " >> arch-chroot /mnt /root"
 	cp ${0} /mnt/root
@@ -203,9 +167,6 @@ function arch_chroot () {
 }
 
 
-#
-# Main
-#
 function main () {
     if [[ $1 == "--chroot" ]]; then
         case ${2} in
@@ -227,7 +188,7 @@ function main () {
 
         set_clock
 
-        set_disk_partition
+        Set_disk_partition
 
         set_partition_tables
 
