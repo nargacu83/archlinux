@@ -4,6 +4,9 @@ LANGUAGE="en_US"
 HOSTNAME="arch"
 USERNAME="username"
 
+function enable_parallel_downloads () {
+    sudo sed -i '/^#\ParallelDownloads =/{N;s/#//g}' /etc/pacman.conf
+}
 
 #
 # System clock
@@ -218,6 +221,8 @@ function main () {
             '_chroot_network_manager') chroot_network_manager;;
         esac
     else
+        
+        enable_parallel_downloads
 
         set_clock
 
