@@ -100,14 +100,15 @@ function chroot_hwclock () {
 }
 function chroot_locale_gen () {
     echo " >> Setting the system language"
-    echo "$LANGUAGE.UTF-8 UTF-8" >> /etc/locale.gen
+    echo "${LANGUAGE}.UTF-8 UTF-8" >> /etc/locale.gen
+    echo "KEYMAP=${LANGUAGE}" >> /etc/vconsole.conf
     locale-gen
     exit 0
 }
 function chroot_hosts () {
     echo " >> Setting the system hosts"
-    echo $HOSTNAME > /etc/hostname
-    echo "127.0.1.1 $HOSTNAME.localdomain $HOSTNAME" >> /etc/hosts
+    echo ${HOSTNAME} > /etc/hostname
+    echo "127.0.1.1 ${HOSTNAME}.localdomain ${HOSTNAME}" >> /etc/hosts
     exit 0
 }
 function chroot_passwd () {
@@ -120,18 +121,18 @@ function chroot_passwd () {
     exit 0
 }
 function chroot_add_user () {
-    echo " >> Changing $USERNAME password"
-	useradd -m $USERNAME
+    echo " >> Changing ${USERNAME} password"
+	useradd -m ${USERNAME}
     passed=1
 	while [[ ${passed} != 0 ]]; do
-		passwd $USERNAME
+		passwd ${USERNAME}
 		passed=$?
 	done
     exit 0
 }
 function chroot_add_user_groups () {
-    echo " >> Adding groups to $USERNAME"
-    usermod -aG wheel,audio,video,optical,storage $USERNAME
+    echo " >> Adding groups to ${USERNAME}"
+    usermod -aG wheel,audio,video,optical,storage ${USERNAME}
     exit 0
 }
 function chroot_config_sudo () {
