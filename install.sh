@@ -82,7 +82,7 @@ function chroot_locale_gen () {
     echo "LANG=\"${language}.UTF-8\"" >> /etc/locale.conf
     echo "${language}.UTF-8 UTF-8" >> /etc/locale.gen
     locale-gen
-    echo "KEYMAP=${language}" > /etc/vconsole.conf
+    echo "KEYMAP=${keymap}" > /etc/vconsole.conf
     exit 0
 }
 function chroot_hosts () {
