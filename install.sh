@@ -191,7 +191,7 @@ function main () {
 
         set_clock
 
-        set_disk_partition
+        Set_disk_partition
 
         set_partition_tables
 
