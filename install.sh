@@ -1,6 +1,6 @@
 #!/bin/bash
 TIME_ZONE="Europe/Paris"
-LANGUAGE="en_US"
+LANGUAGE="fr_FR"
 HOSTNAME="arch"
 USERNAME="username"
 
