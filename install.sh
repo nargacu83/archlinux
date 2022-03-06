@@ -118,7 +118,7 @@ function chroot_add_user_groups () {
 function chroot_config_sudo () {
     echo " >> Configuring visudo"
     pacman -S --needed --noconfirm sudo vim
-    sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL)\s\+ALL\)/\1/' /etc/sudoers
+    sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL:ALL)\s\+ALL\)/\1/' /etc/sudoers
     exit 0
 }
 
