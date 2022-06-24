@@ -83,7 +83,7 @@ function config_system () {
     arch_chroot "_chroot_passwd"
     arch_chroot "_chroot_add_user"
     arch_chroot "_chroot_add_user_groups"
-    arch_chroot "_chroot_config_sudo"
+    arch_chroot "_chroot_config_doas"
 }
 function chroot_symlink () {
     echo " >> Creating symlink for the localetime"
@@ -131,10 +131,13 @@ function chroot_add_user_groups () {
     usermod -aG wheel,audio,video,optical,storage $USERNAME
     exit 0
 }
-function chroot_config_sudo () {
-    echo " >> Configuring visudo"
-    pacman -S --needed --noconfirm sudo vim
-    sed -i 's/^#\s*\(%wheel\s\+ALL=(ALL:ALL)\s\+ALL\)/\1/' /etc/sudoers
+function chroot_config_doas () {
+    echo " >> Installing doas"
+    pacman -S --needed --noconfirm opendoas
+    echo "permit persist :wheel" >> /etc/doas.conf
+    chown -c root:root /etc/doas.conf
+    chmod -c 0400 /etc/doas.conf
+    ln -sf /bin/doas /bin/sudo
     exit 0
 }
 
@@ -212,7 +215,7 @@ function main () {
             '_chroot_passwd') chroot_passwd;;
             '_chroot_add_user') chroot_add_user;;
             '_chroot_add_user_groups') chroot_add_user_groups;;
-            '_chroot_config_sudo') chroot_config_sudo;;
+            '_chroot_config_doas') chroot_config_doas;;
             '_chroot_install_bootloader') chroot_install_bootloader;;
             '_chroot_grub_config') chroot_grub_config;;
             '_chroot_network_manager') chroot_network_manager;;
