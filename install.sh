@@ -28,61 +28,37 @@ ENABLE_MULTILIB=1
 INSTALL_FSTAB=1
 # If parallel_downloads is greater than 0, it will be set otherwise ignored
 parallel_downloads=0
+timezone="Europe/Paris"
 FSTAB=()
 
 function print_message() {
     echo -e "${BOLD}${GREEN} ==> ${NC} ${BOLD}${1}${NORMAL}"
-    log "${2}==> ${1}"
 }
 
 function print_inner_message() {
     echo -e "${BOLD}${BLUE} ->${NC} ${BOLD}${1}${NORMAL}"
-    log " -> ${1}"
 }
 
 function print_error() {
     echo -e "${BOLD}${RED} ->${NC} ${BOLD}${1}${NORMAL}"
-    log " -> ${1}"
     exit 1
-}
-
-function log() {
-  [[ -d ${LOGS_DIRECTORY} ]] || mkdir ${LOGS_DIRECTORY}
-
-  count=0
-  logfile="install.${count}.log"
-
-  # Use multiple log files
-  if [ ${MULTIPLE_LOG_FILES} -eq 1 ]; then
-    # log file already exists
-    if [ -f "${LOGS_DIRECTORY}/${logfile}" ]; then
-      # get it's new possible name
-      while [ -f "${LOGS_DIRECTORY}/${logfile}" ]; do
-          count=$(($count + 1))
-          logfile="install.${count}.log"
-      done
-
-      # rename the existing file
-      mv "${LOGS_DIRECTORY}/install.0.log" "${LOGS_DIRECTORY}/install.${count}.log"
-
-      # reset the name
-      count=0
-      logfile="install.${count}.log"
-    fi
-  fi
-
-  echo "${1}" >> "${LOGS_DIRECTORY}/${logfile}"
 }
 
 function chroot_cmd() {
   arch-chroot /mnt "$@"
 }
 
-function chroot_function() {
-	cp ${0} /mnt/root
-	chmod 755 /mnt/root/$(basename "${0}")
-	arch-chroot /mnt /root/$(basename "${0}") --chroot ${1} ${2}
-	rm /mnt/root/$(basename "${0}")
+function chroot_install() {
+  # Copy chroot scripts
+	cp ./scripts/chroot /mnt/root
+	cp ${CONFIG_DIRECTORY}/${SELECTED_CONFIG} /mnt/root/chroot/config
+  chmod 755 /mnt/root/chroot/*
+
+  # Execute entry point
+	arch-chroot /mnt /root/chroot/_install
+
+  # Removes scripts once done
+	rm -rf /mnt/root/chroot
 }
 
 function chroot_sudo_cmd() {
@@ -174,11 +150,10 @@ done
 
 check_config
 
-# Import the seleted configuration
+# Import the selected configuration
 source "${CONFIG_DIRECTORY}/${SELECTED_CONFIG}"
 
 # Install base
 source "${SCRIPTS_DIRECTORY}/_create_partitions"
 source "${SCRIPTS_DIRECTORY}/_install_base"
-source "${SCRIPTS_DIRECTORY}/_create_user"
 source "${SCRIPTS_DIRECTORY}/_install_bootloader"

@@ -8,7 +8,7 @@ user_groups="wheel,audio,video,optical,storage"
 
 LANGUAGE="fr_FR"
 KEYMAP="fr"
-TIMEZONE="Europe/Paris"
+timezone="Europe/Paris"
 
 # Enable archlinux installation
 # This can be disabled to only install dotfiles

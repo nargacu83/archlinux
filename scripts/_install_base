@@ -9,31 +9,13 @@ fi
 print_inner_message "Setting the system clock..."
 
 timedatectl set-ntp true
-timedatectl set-timezone ${time_zone}
+timedatectl set-timezone ${timezone}
 
 print_message "Installing base..."
 
 pacstrap /mnt base linux linux-firmware
 
-print_inner_message "Creating symlink for the localetime"
+chroot_install
 
-ln -sf /usr/share/zoneinfo/${time_zone} /etc/localtime
-
-print_inner_message "Setting the hardware clock"
-
-chroot_cmd hwclock --systohc
-
-print_inner_message "Setting system language"
-
-chroot_cmd echo "LANG=\"${language}.UTF-8\"" >> /etc/locale.conf
-chroot_cmd echo "${language}.UTF-8 UTF-8" >> /etc/locale.gen
-chroot_cmd locale-gen
-chroot_cmd echo "KEYMAP=${keymap}" > /etc/vconsole.conf
-
-print_inner_message "Setting hosts"
-
-chroot_cmd echo ${hostname} > /etc/hostname
-chroot_cmd echo "127.0.1.1 ${hostname}.localdomain ${hostname}" >> /etc/hosts
-
-chroot_cmd pacman -S --needed --noconfirm networkmanager git
-chroot_cmd systemctl enable NetworkManager
+print_inner_message "Generating FSTAB..."
+genfstab -U -p /mnt >> /mnt/etc/fstab
