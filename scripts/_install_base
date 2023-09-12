@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-print_inner_message "Setting parallel downloads..."
+print_inner_message "Setting installation parallel downloads..."
  
 if [ ${parallel_downloads} -gt 0 ]; then
   sed -i '/^#\ParallelDownloads =/{N;s/#//g}' /etc/pacman.conf
@@ -14,8 +14,6 @@ timedatectl set-timezone ${timezone}
 print_message "Installing base..."
 
 pacstrap /mnt base linux linux-firmware
-
-chroot_install
 
 print_inner_message "Generating FSTAB..."
 genfstab -U -p /mnt >> /mnt/etc/fstab

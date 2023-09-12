@@ -22,6 +22,7 @@ function print_error() {
     echo -e "${BOLD}${RED} ->${NC} ${BOLD}${1}${NORMAL}"
     exit 1
 }
+
 function user_password() {
   passed=1
   while [[ ${passed} != 0 ]]; do
@@ -31,9 +32,15 @@ function user_password() {
 }
 
 # Import the selected configuration
-source "config"
+source "_config"
 
 print_message "Entering arch-chroot..."
+
+print_inner_message "Setting parallel downloads..."
+ 
+if [ ${parallel_downloads} -gt 0 ]; then
+  sed -i '/^#\ParallelDownloads =/{N;s/#//g}' /etc/pacman.conf
+fi
 
 print_inner_message "Creating symlink for the localtime"
 
@@ -74,4 +81,18 @@ print_inner_message "Adding groups to ${username}"
 
 usermod -aG ${user_groups} ${username}
 
+print_inner_message "Installing bootloader..."
+
+# Systemd boot
+
+# Grub
+pacman -S --needed --noconfirm grub
+pacman -S --needed --noconfirm efibootmgr dosfstools os-prober mtools
+
+# If enabled and configured install dotfiles 
+if [ ${install_dotfiles} -gt 0 ]; then
+  git clone ${dotfiles_url} dotfiles && cd dotfiles && ${dotfiles_command}
+fi
+
 print_message "Exiting arch-chroot..."
+exit 0

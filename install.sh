@@ -14,22 +14,18 @@ NORMAL=$(tput sgr0)
 CURRENT_DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 INSTALL_DIRECTORY="${CURRENT_DIRECTORY}/install"
-CHROOT_INSTALL_DIRECTORY="/mnt/install"
-CONFIG_DIRECTORY="${CURRENT_DIRECTORY}/config"
+config_directory="${CURRENT_DIRECTORY}/config"
 LOGS_DIRECTORY="${CURRENT_DIRECTORY}/logs"
-SCRIPTS_DIRECTORY="${CURRENT_DIRECTORY}/scripts"
-MULTIPLE_LOG_FILES=0
+scripts_directory="${CURRENT_DIRECTORY}/scripts"
 errors=()
 
 # Initialize configuration variables
-INSTALL_AUR=1
-INSTALL_FLATPAKS=1
-ENABLE_MULTILIB=1
-INSTALL_FSTAB=1
+enable_multilib=1
+enable_fstab=1
 # If parallel_downloads is greater than 0, it will be set otherwise ignored
-parallel_downloads=0
 timezone="Europe/Paris"
-FSTAB=()
+parallel_downloads=0
+fstab=()
 
 function print_message() {
     echo -e "${BOLD}${GREEN} ==> ${NC} ${BOLD}${1}${NORMAL}"
@@ -44,35 +40,10 @@ function print_error() {
     exit 1
 }
 
-function chroot_cmd() {
-  arch-chroot /mnt "$@"
-}
-
-function chroot_install() {
-  # Copy chroot scripts
-	cp ./scripts/chroot /mnt/root
-	cp ${CONFIG_DIRECTORY}/${SELECTED_CONFIG} /mnt/root/chroot/config
-  chmod 755 /mnt/root/chroot/*
-
-  # Execute entry point
-	arch-chroot /mnt /root/chroot/_install
-
-  # Removes scripts once done
-	rm -rf /mnt/root/chroot
-}
-
-function chroot_sudo_cmd() {
-  arch-chroot /mnt sudo -u ${username} "$@"
-}
-
-function chroot_user_enter() {
-  arch-chroot /mnt su ${username}
-}
-
 function check_config() {
   # Get all config files
   configs=()
-  for file in "${CONFIG_DIRECTORY}"/*; do
+  for file in "${config_directory}"/*; do
       configs+=($(basename $file))
   done
 
@@ -83,19 +54,19 @@ function check_config() {
   fi
 
   # Check if selected config was not given
-  if [ "$SELECTED_CONFIG" == "" ]; then
-    SELECTED_CONFIG="default"
+  if [ "$selected_config" == "" ]; then
+    selected_config="default"
   fi
 
   # Check if the given configuration file name exists
   valid=0
   for config in "${configs[@]}"; do
-    if [ "$SELECTED_CONFIG" == "$config" ]; then
+    if [ "$selected_config" == "$config" ]; then
       valid=1
     fi
   done
   if [ $valid -eq 0 ]; then
-    print_error "Configuration file \"$SELECTED_CONFIG\" not found"
+    print_error "Configuration file \"$selected_config\" not found"
     exit 1
   fi
 }
@@ -105,8 +76,6 @@ usage()
     echo "Usage: $0 [args]"
     echo "Args:"
     echo "--config <config_name>"
-    echo "--no-flatpak"
-    echo "--no-aur"
     echo "--no-multilib"
     echo "--parallel-downloads <amount>"
 }
@@ -121,16 +90,10 @@ for i in "${!args[@]}"; do
   arg=${args[$i]}
   case $arg in
     --config)
-      SELECTED_CONFIG=${args[$(($i + 1))]}
-      ;;
-    --no-flatpak)
-      INSTALL_FLATPAK=0
-      ;;
-    --no-aur)
-      INSTALL_AUR=0
+      selected_config=${args[$(($i + 1))]}
       ;;
     --no-multilib)
-      ENABLE_MULTILIB=0
+      enable_multilib=0
       ;;
     --parallel-downloads)
       parallel_downloads=${args[$(($i + 1))]}
@@ -151,9 +114,22 @@ done
 check_config
 
 # Import the selected configuration
-source "${CONFIG_DIRECTORY}/${SELECTED_CONFIG}"
+source "${config_directory}/${selected_config}"
 
 # Install base
-source "${SCRIPTS_DIRECTORY}/_create_partitions"
-source "${SCRIPTS_DIRECTORY}/_install_base"
-source "${SCRIPTS_DIRECTORY}/_install_bootloader"
+source "${scripts_directory}/_create_partitions"
+source "${scripts_directory}/_install_base"
+
+# Continue installation in chroot
+# Copy chroot script
+cp ./scripts/_chroot_install /mnt/root
+# Copy the config for the chroot script
+cp ${config_directory}/${selected_config} /mnt/root/_config
+chmod 755 /mnt/root/_chroot_install
+
+# Execute entry point
+arch-chroot /mnt /root/_chroot_install
+
+# Removes scripts once done
+rm /mnt/root/_config
+rm /mnt/root/_chroot_install

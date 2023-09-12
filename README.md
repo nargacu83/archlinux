@@ -1,12 +1,12 @@
 # ArchLinux installation scripts
 
-A simple, yet powerful ArchLinux installation script.
+A simple ArchLinux installation script.
 
 ## How to use
 
 1. Clone the repository
     
-    `git clone https://github.com/nargacu83/archlinux archlinux`.
+    `git clone https://github.com/nargacu83/archlinux`.
 
 2. Configure
     
@@ -15,6 +15,8 @@ A simple, yet powerful ArchLinux installation script.
 3. Install
 
     `./install --config my_config`
+
+    You can also install ArchLinux with your dotfiles `./install --config my_config --dotfiles`
 
 ## Configuration
 
