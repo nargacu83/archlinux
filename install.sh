@@ -1,214 +1,181 @@
-#!/bin/bash
-time_zone="Europe/Paris"
-language="fr_FR"
-keymap="fr"
-hostname="arch"
-username="username"
+#!/usr/bin/env bash
 
-function enable_parallel_downloads () {
-    sudo sed -i '/^#\ParallelDownloads =/{N;s/#//g}' /etc/pacman.conf
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+# Styles
+NC='\033[0m' # No Color
+BOLD=$(tput bold)
+NORMAL=$(tput sgr0)
+
+# Global variables
+CURRENT_DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+INSTALL_DIRECTORY="${CURRENT_DIRECTORY}/install"
+CONFIG_DIRECTORY="${CURRENT_DIRECTORY}/config"
+LOGS_DIRECTORY="${CURRENT_DIRECTORY}/logs"
+SCRIPTS_DIRECTORY="${CURRENT_DIRECTORY}/scripts"
+MULTIPLE_LOG_FILES=0
+errors=()
+
+# Initialize configuration variables
+INSTALL_AUR=1
+INSTALL_FLATPAKS=1
+ENABLE_MULTILIB=1
+INSTALL_FSTAB=1
+# If parallel_downloads is greater than 0, it will be set otherwise ignored
+parallel_downloads=0
+FSTAB=()
+
+function print_message() {
+    echo -e "${BOLD}${GREEN} ==> ${NC} ${BOLD}${1}${NORMAL}"
+    log "${2}==> ${1}"
 }
 
-function set_clock () {
-    echo "Setting the system clock"
-    timedatectl set-ntp true
-    timedatectl set-timezone ${time_zone}
+function print_inner_message() {
+    echo -e "${BOLD}${BLUE} ->${NC} ${BOLD}${1}${NORMAL}"
+    log " -> ${1}"
 }
 
+function print_error() {
+    echo -e "${BOLD}${RED} ->${NC} ${BOLD}${1}${NORMAL}"
+    log " -> ${1}"
+    exit 1
+}
 
-function set_disk_partition () {
-    lsblk -f
-    read -p "Select your disk (eg. /dev/sda): " s_disk
-    echo ""
-    read -p "Are you sure is it your disk, all the data will be erased (${s_disk})? [Y/n] " disk_confirmation
-    if [ "${disk_confirmation}" != "Y" ] && [ "${disk_confirmation}" != "y" ]; then
-        echo "Exiting script.."
+function log() {
+  [[ -d ${LOGS_DIRECTORY} ]] || mkdir ${LOGS_DIRECTORY}
+
+  count=0
+  logfile="install.${count}.log"
+
+  # Use multiple log files
+  if [ ${MULTIPLE_LOG_FILES} -eq 1 ]; then
+    # log file already exists
+    if [ -f "${LOGS_DIRECTORY}/${logfile}" ]; then
+      # get it's new possible name
+      while [ -f "${LOGS_DIRECTORY}/${logfile}" ]; do
+          count=$(($count + 1))
+          logfile="install.${count}.log"
+      done
+
+      # rename the existing file
+      mv "${LOGS_DIRECTORY}/install.0.log" "${LOGS_DIRECTORY}/install.${count}.log"
+
+      # reset the name
+      count=0
+      logfile="install.${count}.log"
+    fi
+  fi
+
+  echo "${1}" >> "${LOGS_DIRECTORY}/${logfile}"
+}
+
+function chroot_cmd() {
+  arch-chroot /mnt "$@"
+}
+
+function chroot_sudo_cmd() {
+  arch-chroot /mnt sudo -u ${username} "$@"
+}
+
+function chroot_enter() {
+  arch-chroot /mnt
+}
+
+function chroot_user_enter() {
+  arch-chroot /mnt su ${username}
+}
+
+function chroot_exit() {
+  exit 0
+}
+
+function check_config() {
+  # Get all config files
+  configs=()
+  for file in "${CONFIG_DIRECTORY}"/*; do
+      configs+=($(basename $file))
+  done
+
+  # Check if there are config files
+  if [ ${#configs[@]} -eq 0 ]; then
+    print_error "No configs detected"
+    exit 1
+  fi
+
+  # Check if selected config was not given
+  if [ "$SELECTED_CONFIG" == "" ]; then
+    SELECTED_CONFIG="default"
+  fi
+
+  # Check if the given configuration file name exists
+  valid=0
+  for config in "${configs[@]}"; do
+    if [ "$SELECTED_CONFIG" == "$config" ]; then
+      valid=1
+    fi
+  done
+  if [ $valid -eq 0 ]; then
+    print_error "Configuration file \"$SELECTED_CONFIG\" not found"
+    exit 1
+  fi
+}
+
+usage()
+{
+    echo "Usage: $0 [args]"
+    echo "Args:"
+    echo "--config <config_name>"
+    echo "--no-flatpak"
+    echo "--no-aur"
+    echo "--no-multilib"
+    echo "--parallel-downloads <amount>"
+}
+
+args=()
+while [ "${1:-}" != "" ]; do
+  args+=("${1:-}")
+  shift
+done
+
+for i in "${!args[@]}"; do
+  arg=${args[$i]}
+  case $arg in
+    --config)
+      SELECTED_CONFIG=${args[$(($i + 1))]}
+      ;;
+    --no-flatpak)
+      INSTALL_FLATPAK=0
+      ;;
+    --no-aur)
+      INSTALL_AUR=0
+      ;;
+    --no-multilib)
+      ENABLE_MULTILIB=0
+      ;;
+    --parallel-downloads)
+      parallel_downloads=${args[$(($i + 1))]}
+      if ! [[ $parallel_downloads =~ '^[0-9]+$' ]] ; then
+        parallel_downloads=0
+        print_error "Invalid argument value for parallel_downloads"
         exit 1
-    fi
-
-    if [ "${s_disk::8}" == "/dev/nvm" ]; then
-        p_disk="${s_disk}p"
-    else
-        p_disk="${s_disk}"
-    fi
-
-    parted ${s_disk} mklabel gpt                  # GPT (sgdisk --list-types)
-    sgdisk ${s_disk} -n=1:0:+550M -t=1:ef00       # UEFI
-    sgdisk ${s_disk} -n=2:0:0 -t=2:8300           # File System
-}
-
-function set_partition_tables () {
-    echo " >> Setting the partitions tables"
-    mkfs.vfat -F32 "${p_disk}1"
-    mkfs.ext4 "${p_disk}2"
-}
-
-function mount_file_system () {
-    echo " >> Mounting the file system"
-    mount "${p_disk}2" /mnt
-    mkdir -p /mnt/boot/efi
-    mount "${p_disk}1" /mnt/boot/efi
-}
-
-function install_base_packages () {
-    echo " >> Installing linux base package"
-    pacstrap /mnt base linux linux-firmware
-}
-
-function config_system () {
-    echo " >> Configuring system"
-    genfstab -U -p /mnt >> /mnt/etc/fstab
-    arch_chroot "_chroot_symlink"
-    arch_chroot "_chroot_hwclock"
-    arch_chroot "_chroot_locale_gen"
-    arch_chroot "_chroot_hosts"
-    arch_chroot "_chroot_passwd"
-    arch_chroot "_chroot_add_user"
-    arch_chroot "_chroot_add_user_groups"
-    arch_chroot "_chroot_config_doas"
-}
-function chroot_symlink () {
-    echo " >> Creating symlink for the localetime"
-    ln -sf /usr/share/zoneinfo/${time_zone} /etc/localtime
-    exit 0
-}
-function chroot_hwclock () {
-    echo " >> Setting the hardware clock"
-    hwclock --systohc
-    exit 0
-}
-function chroot_locale_gen () {
-    echo " >> Setting the system language"
-    echo "LANG=\"${language}.UTF-8\"" >> /etc/locale.conf
-    echo "${language}.UTF-8 UTF-8" >> /etc/locale.gen
-    locale-gen
-    echo "KEYMAP=${keymap}" > /etc/vconsole.conf
-    exit 0
-}
-function chroot_hosts () {
-    echo " >> Setting the system hosts"
-    echo ${hostname} > /etc/hostname
-    echo "127.0.1.1 ${hostname}.localdomain ${hostname}" >> /etc/hosts
-    exit 0
-}
-function chroot_passwd () {
-    echo " >> Changing root password"
-	passed=1
-	while [[ ${passed} != 0 ]]; do
-		passwd root
-		passed=$?
-	done
-    exit 0
-}
-function chroot_add_user () {
-    echo " >> Changing ${username} password"
-	useradd -m ${username}
-    passed=1
-	while [[ ${passed} != 0 ]]; do
-		passwd ${username}
-		passed=$?
-	done
-    exit 0
-}
-function chroot_add_user_groups () {
-    echo " >> Adding groups to ${username}"
-    usermod -aG wheel,audio,video,optical,storage ${username}
-    exit 0
-}
-function chroot_config_doas () {
-    echo " >> Installing doas"
-    pacman -S --needed --noconfirm opendoas
-    echo "permit persist :wheel" >> /etc/doas.conf
-    chown -c root:root /etc/doas.conf
-    chmod -c 0400 /etc/doas.conf
-    ln -sf /bin/doas /bin/sudo
-    exit 0
-}
-
-function config_bootloader () {
-    arch_chroot "_chroot_install_bootloader"
-    arch_chroot "_chroot_create_efi_dir"
-    arch_chroot "_chroot_mount_efi_dir" "${p_disk}"
-    arch_chroot "_chroot_grub_config"
-}
-function chroot_install_bootloader () {
-    echo " >> Installing the bootloader"
-    pacman -S --needed --noconfirm grub
-    pacman -S --needed --noconfirm efibootmgr dosfstools os-prober mtools
-    exit 0
-}
-function chroot_grub_config () {
-    echo " >> Configuring the grub"
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB --recheck
-    grub-mkconfig -o /boot/grub/grub.cfg
-    exit 0
-}
-
-function config_network_manager () {
-    arch_chroot "_chroot_network_manager"
-}
-function chroot_network_manager () {
-    echo " >> Installing the network manager"
-    pacman -S --needed --noconfirm networkmanager git
-    systemctl enable NetworkManager
-    exit 0
-}
-
-function the_end () {
-    echo " >> Umount /mnt"
-    umount -l /mnt
-    exit 0
-}
-
-function arch_chroot () {
-	echo " >> arch-chroot /mnt /root"
-	cp ${0} /mnt/root
-	chmod 755 /mnt/root/$(basename "${0}")
-	arch-chroot /mnt /root/$(basename "${0}") --chroot ${1} ${2}
-	rm /mnt/root/$(basename "${0}")
-	echo " >> exit arch-chroot"
-}
+      fi
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+  esac
+done
 
 
-function main () {
-    if [[ $1 == "--chroot" ]]; then
-        case ${2} in
-            '_chroot_symlink') chroot_symlink;;
-            '_chroot_hwclock') chroot_hwclock;;
-            '_chroot_locale_gen') chroot_locale_gen;;
-            '_chroot_hosts') chroot_hosts;;
-            '_chroot_passwd') chroot_passwd;;
-            '_chroot_add_user') chroot_add_user;;
-            '_chroot_add_user_groups') chroot_add_user_groups;;
-            '_chroot_config_doas') chroot_config_doas;;
-            '_chroot_install_bootloader') chroot_install_bootloader;;
-            '_chroot_grub_config') chroot_grub_config;;
-            '_chroot_network_manager') chroot_network_manager;;
-        esac
-    else
-        
-        enable_parallel_downloads
+check_config
 
-        set_clock
+# Import the seleted configuration
+source "${CONFIG_DIRECTORY}/${SELECTED_CONFIG}"
 
-        set_disk_partition
-
-        set_partition_tables
-
-        mount_file_system
-
-        install_base_packages
-
-        config_system
-
-        config_bootloader
-
-        config_network_manager
-
-        the_end
-
-    fi
-}
-
-
-main "$@"
+# Install base
+source "${SCRIPTS_DIRECTORY}/_install_base"
