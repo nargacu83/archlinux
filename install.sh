@@ -179,3 +179,5 @@ source "${CONFIG_DIRECTORY}/${SELECTED_CONFIG}"
 
 # Install base
 source "${SCRIPTS_DIRECTORY}/_install_base"
+source "${SCRIPTS_DIRECTORY}/_create_user"
+source "${SCRIPTS_DIRECTORY}/_install_bootloader"
