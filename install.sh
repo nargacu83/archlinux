@@ -81,16 +81,8 @@ function chroot_sudo_cmd() {
   arch-chroot /mnt sudo -u ${username} "$@"
 }
 
-function chroot_enter() {
-  arch-chroot /mnt
-}
-
 function chroot_user_enter() {
   arch-chroot /mnt su ${username}
-}
-
-function chroot_exit() {
-  exit 0
 }
 
 function check_config() {
