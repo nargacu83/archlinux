@@ -14,6 +14,7 @@ NORMAL=$(tput sgr0)
 CURRENT_DIRECTORY="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 INSTALL_DIRECTORY="${CURRENT_DIRECTORY}/install"
+CHROOT_INSTALL_DIRECTORY="/mnt/install"
 CONFIG_DIRECTORY="${CURRENT_DIRECTORY}/config"
 LOGS_DIRECTORY="${CURRENT_DIRECTORY}/logs"
 SCRIPTS_DIRECTORY="${CURRENT_DIRECTORY}/scripts"
@@ -75,6 +76,13 @@ function log() {
 
 function chroot_cmd() {
   arch-chroot /mnt "$@"
+}
+
+function chroot_function() {
+	cp ${0} /mnt/root
+	chmod 755 /mnt/root/$(basename "${0}")
+	arch-chroot /mnt /root/$(basename "${0}") --chroot ${1} ${2}
+	rm /mnt/root/$(basename "${0}")
 }
 
 function chroot_sudo_cmd() {

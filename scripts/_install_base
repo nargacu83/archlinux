@@ -15,8 +15,6 @@ print_message "Installing base..."
 
 pacstrap /mnt base linux linux-firmware
 
-# CHROOT
-
 print_inner_message "Creating symlink for the localetime"
 
 ln -sf /usr/share/zoneinfo/${time_zone} /etc/localtime

@@ -3,7 +3,7 @@
 # This is the default user configuration.
 
 HOSTNAME="arch"
-USERNAME="username"
+username="username"
 user_groups="wheel,audio,video,optical,storage"
 
 LANGUAGE="fr_FR"

@@ -4,10 +4,19 @@
 print_message "Creating user..."
 
 
-function change_password() {
+function root_password() {
   passed=1
   while [[ ${passed} != 0 ]]; do
-    passwd ${1}
+    passwd root
+    passed=$?
+  done
+  exit 0
+}
+
+function user_password() {
+  passed=1
+  while [[ ${passed} != 0 ]]; do
+    passwd ${username}
     passed=$?
   done
   exit 0
@@ -15,15 +24,15 @@ function change_password() {
 
 print_inner_message "Setting root password"
 
-chroot_cmd change_password root
+chroot_function "root_password"
 
 print_inner_message "Adding ${username}..."
 
-chroot_cmd useradd -m ${username}
+chroot_cmd "useradd -m ${username}"
 
 print_inner_message "Setting ${username} password..."
 
-chroot_cmd change_password ${username}
+chroot_cmd user_password
 
 print_inner_message "Adding groups to ${username}"
 
