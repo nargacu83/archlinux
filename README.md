@@ -1,29 +1,29 @@
-# Simple Arch Installer
+# ArchLinux installation scripts
 
-This script allows you to install Arch Linux (UEFI) easily and quickly without any bloat.
+A simple, yet powerful ArchLinux installation script.
 
-This program is not intended for a beginner, it just allows you to automate the installation.
+## How to use
 
-## How it works
+1. Clone the repository
+    
+    `git clone https://github.com/nargacu83/archlinux archlinux`.
 
-The script will create 3 partitions:  
-1: BOOT -> 550M  
-2: SWAP -> 8G  
-3: HOME -> _  
-Then it will install the necessary packages
+2. Configure
+    
+    `cp ./config/default ./config/my_config`.
+    
+3. Install
 
-## Run the script
+    `./install --config my_config`
 
-You have to clone the install.sh and launch it.
+## Configuration
 
-## Configure the script
+You can check your configuration by using the command `install --check --config my_config`.
 
-The variables at the top of the page can be changed.
+## Advanced configuration
 
-## Adding features
+You can create your own scripts in `./scripts/custom/` and register it in your configuration.
 
-I advise you to follow the method of [suckless.org](https://dwm.suckless.org/customisation/patches_in_git/) to patch your script
+## Credits
 
-## Thanks to
-
-This script is inspired by the [archfi](https://github.com/MatMoul/archfi) project !
+Mageas for his bloated scripts.

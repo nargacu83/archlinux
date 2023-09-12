@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# This is the default user configuration.
+
+HOSTNAME="arch"
+USERNAME="username"
+user_groups="wheel,audio,video,optical,storage"
+
+LANGUAGE="fr_FR"
+KEYMAP="fr"
+TIMEZONE="Europe/Paris"
+
+# Enable archlinux installation
+# This can be disabled to only install dotfiles
+INSTALL_SYSTEM=0
+# Enable FSTAB configuration
+INSTALL_FSTAB=0
+# Enable AUR packages installation
+INSTALL_AUR=0
+# Enable Flatpaks packages installation
+INSTALL_FLATPAKS=0
+# Enable multilib for 32 bits applications
+ENABLE_MULTILIB=1
+# Number of pacman parallel downloads
+parallel_downloads=0
+# Custom scripts are registered here 
+SCRIPTS=()
+# System packages
+PACKAGES=()
+# AUR Packages
+AUR=()
+# Flatpaks packages
+FLATPAKS=()
+# List of all of your mounted points
+FSTAB=(
+    "UUID -> /mount/path -> defaults -> ext4"
+)

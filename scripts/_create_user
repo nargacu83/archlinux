@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+
+print_message "Creating user..."
+
+print_inner_message "Setting root password"
+
+chroot_enter
+passed=1
+while [[ ${passed} != 0 ]]; do
+  passwd root
+  passed=$?
+done
+chroot_exit
+
+print_inner_message "Adding ${username}..."
+chroot_cmd useradd -m ${username}
+
+print_inner_message "Setting ${username} password..."
+
+chroot_enter
+passed=1
+while [[ ${passed} != 0 ]]; do
+  passwd ${username}
+  passed=$?
+done
+chroot_exit
+
+
+print_inner_message "Adding groups to ${username}"
+
+chroot_cmd usermod -aG ${user_groups} ${username}
+
