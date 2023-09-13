@@ -1,0 +1,139 @@
+{
+    "additional-repositories": [],
+    "archinstall-language": "English",
+    "audio_config": {
+        "audio": "pipewire"
+    },
+    "bootloader": "Systemd-boot",
+    "config_version": "2.6.0",
+    "debug": false,
+    "disk_config": {
+        "config_type": "default_layout",
+        "device_modifications": [
+            {
+                "device": "/dev/nvme2n1",
+                "partitions": [
+                    {
+                        "btrfs": [],
+                        "flags": [
+                            "Boot"
+                        ],
+                        "fs_type": "fat32",
+                        "length": {
+                            "sector_size": null,
+                            "total_size": null,
+                            "unit": "MiB",
+                            "value": 512
+                        },
+                        "mount_options": [],
+                        "mountpoint": "/boot",
+                        "obj_id": "6c337bb2-3276-4c8c-8eef-1f9e011e8301",
+                        "start": {
+                            "sector_size": null,
+                            "total_size": null,
+                            "unit": "MiB",
+                            "value": 1
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    },
+                    {
+                        "btrfs": [],
+                        "flags": [],
+                        "fs_type": "ext4",
+                        "length": {
+                            "sector_size": null,
+                            "total_size": {
+                                "sector_size": null,
+                                "total_size": null,
+                                "unit": "B",
+                                "value": 500107862016
+                            },
+                            "unit": "Percent",
+                            "value": 100
+                        },
+                        "mount_options": [],
+                        "mountpoint": "/",
+                        "obj_id": "cab89876-a38b-42fa-a68f-6b12b2073369",
+                        "start": {
+                            "sector_size": null,
+                            "total_size": null,
+                            "unit": "MiB",
+                            "value": 513
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    }
+                ],
+                "wipe": true
+            }
+        ]
+    },
+    "disk_encryption": null,
+    "hostname": "archlinux",
+    "kernels": [
+        "linux"
+    ],
+    "locale_config": {
+        "kb_layout": "fr",
+        "sys_enc": "UTF-8",
+        "sys_lang": "fr_FR.UTF-8"
+    },
+    "mirror_config": {
+        "custom_mirrors": [],
+        "mirror_regions": {
+            "France": [
+                "https://mirrors.jtremesay.org/archlinux/$repo/os/$arch",
+                "https://mirrors.gandi.net/archlinux/$repo/os/$arch",
+                "https://mirrors.eric.ovh/arch/$repo/os/$arch",
+                "https://mirrors.celianvdb.fr/archlinux/$repo/os/$arch",
+                "https://mirror.wormhole.eu/archlinux/$repo/os/$arch",
+                "https://mirror.theo546.fr/archlinux/$repo/os/$arch",
+                "https://mirror.thekinrar.fr/archlinux/$repo/os/$arch",
+                "https://mirror.sysa.tech/archlinux/$repo/os/$arch",
+                "https://mirror.oldsql.cc/archlinux/$repo/os/$arch",
+                "https://mirror.ibakerserver.pt/Arch/$repo/os/$arch",
+                "https://mirror.cyberbits.eu/archlinux/$repo/os/$arch",
+                "https://mirroir.labhouse.fr/arch/$repo/os/$arch",
+                "https://archlinux.mailtunnel.eu/$repo/os/$arch",
+                "https://arch.yourlabs.org/$repo/os/$arch",
+                "http://mirrors.gandi.net/archlinux/$repo/os/$arch",
+                "http://mirrors.celianvdb.fr/archlinux/$repo/os/$arch",
+                "http://mirror.theo546.fr/archlinux/$repo/os/$arch",
+                "http://mirror.oldsql.cc/archlinux/$repo/os/$arch",
+                "http://mirror.lastmikoi.net/archlinux/$repo/os/$arch",
+                "http://mirror.cyberbits.eu/archlinux/$repo/os/$arch",
+                "http://mirror.archlinux.ikoula.com/archlinux/$repo/os/$arch",
+                "http://mirroir.labhouse.fr/arch/$repo/os/$arch",
+                "http://mir.archlinux.fr/$repo/os/$arch",
+                "http://ftp.u-strasbg.fr/linux/distributions/archlinux/$repo/os/$arch",
+                "http://archlinux.mirrors.ovh.net/archlinux/$repo/os/$arch",
+                "http://archlinux.mailtunnel.eu/$repo/os/$arch",
+                "http://archlinux.datagr.am/$repo/os/$arch",
+                "http://arch.yourlabs.org/$repo/os/$arch"
+            ]
+        }
+    },
+    "network_config": {
+        "type": "nm"
+    },
+    "no_pkg_lookups": false,
+    "ntp": true,
+    "offline": false,
+    "packages": [],
+    "parallel downloads": 0,
+    "profile_config": {
+        "gfx_driver": null,
+        "greeter": null,
+        "profile": {
+            "custom_settings": {},
+            "details": [],
+            "main": "Minimal"
+        }
+    },
+    "script": "guided",
+    "silent": false,
+    "swap": true,
+    "timezone": "UTC",
+    "version": "2.6.0"
+}
